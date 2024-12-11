@@ -75,8 +75,29 @@ namespace Dowsify.Main
 
             if (selectFolder.ShowDialog() == DialogResult.OK)
             {
+                CloseProject();
                 ReadRomExtractedFolder(selectFolder.SelectedPath);
             }
+        }
+
+        private void CloseProject()
+        {
+            RomData.Reset();
+            RomLoaded = false;
+            UnsavedChanges = false;
+            saveToolStripMenuItem.Enabled = false;
+            patchesToolStripMenuItem.Enabled = false;
+            btn_SaveChanges.Enabled = false;
+            btn_Patches.Enabled = false;
+            hiddenItemTablePanel.Controls.Remove(dt_HiddenItems);
+        }
+
+        private void EnableMenus()
+        {
+            saveToolStripMenuItem.Enabled = true;
+            patchesToolStripMenuItem.Enabled = true;
+            btn_SaveChanges.Enabled = true;
+            btn_Patches.Enabled = true;
         }
 
         public void ReadRomExtractedFolder(string filePath)
@@ -112,6 +133,7 @@ namespace Dowsify.Main
                 OpenLoadingDialog(LoadType.LoadRomData);
                 InitializeHiddentItemTable();
                 PopulateHiddenItemTable();
+                EnableMenus();
             }
         }
 
@@ -120,9 +142,9 @@ namespace Dowsify.Main
             for (int i = 0; i < RomData.HiddenItems.Count; i++)
             {
                 var hiddenItem = RomData.HiddenItems[i];
-                string hiddenItemName = RomData.ItemNames[(int)hiddenItem.ItemId];
-                uint quantity = hiddenItem.Quantity;
-                uint itemIndex = hiddenItem.Index;
+                string hiddenItemName = RomData.ItemNames[hiddenItem.ItemId];
+                ushort quantity = hiddenItem.Quantity;
+                ushort itemIndex = hiddenItem.Index;
                 string commonScript = hiddenItem.CommonScript;
 
                 dt_HiddenItems.Rows.Add(hiddenItemName, quantity, itemIndex, commonScript);
@@ -159,6 +181,8 @@ namespace Dowsify.Main
                 {
                     RomData.GameVersion = GameVersion.HgEngine;
                 }
+
+
 
                 RomData.ItemNames = romFileMethods.GetItemNames();
                 ReportProgress();
@@ -198,7 +222,15 @@ namespace Dowsify.Main
                                           "HeartGold or SoulSilver versions.";
                     MessageBox.Show(errorMessage, "Unsupported ROM", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     Console.WriteLine("ROM version is unsupported.");
-                    RomLoaded = false;
+                    CloseProject();
+                    return;
+                }
+
+                if (RomData.GameVersion != GameVersion.HeartGold)
+                {
+                    MessageBox.Show("Dowsify can only currently open HG roms (only tested on HG USA).\n" +
+                        "Other ROM compatability will come soon.", "Not Yet Supported", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    CloseProject();
                     return;
                 }
                 romFileMethods.SetNarcDirectories();
@@ -228,6 +260,9 @@ namespace Dowsify.Main
                 SelectionMode = DataGridViewSelectionMode.FullRowSelect,
                 AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
             };
+
+            dt_HiddenItems.CurrentCellDirtyStateChanged -= dt_HiddenItems_CurrentCellDirtyStateChanged;
+            dt_HiddenItems.CurrentCellDirtyStateChanged += dt_HiddenItems_CurrentCellDirtyStateChanged;
 
             dt_HiddenItems.Columns.Clear();
 
@@ -289,6 +324,7 @@ namespace Dowsify.Main
                     return;
                 }
             }
+
             ChooseRomFolder();
         }
 
@@ -309,6 +345,122 @@ namespace Dowsify.Main
         private void Mainform_Shown(object sender, EventArgs e)
         {
             romFileMethods = new RomFileMethods();
+        }
+
+        private void standardizeTableIndexToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            IsLoadingData = true;
+            Patch_StandardizeTable();
+            IsLoadingData = false;
+        }
+
+        private void Patch_StandardizeTable()
+        {
+            var confirm = MessageBox.Show(
+                "This patch will sort the Hidden Items Table by Index." +
+                "\nThis means the CommonScripts will also be in consecutive order." +
+                "\nHidden Item overworld events will point to different items than vanilla.\n" +
+                "\nIf you are wanting a 'Vanilla Experience' and do not plan on changing hidden item locations, do not use this patch.",
+                "Confirm Patch",
+                MessageBoxButtons.OKCancel,
+                MessageBoxIcon.Information
+            );
+
+            if (confirm != DialogResult.OK)
+                return;
+
+            var items = dt_HiddenItems.Rows
+                .Cast<DataGridViewRow>()
+                .Where(row => !row.IsNewRow)
+                .Select((row, index) => new HiddenItem(
+                    index,
+                    (ushort)RomData.ItemNames.FindIndex(x => x == row.Cells[0].Value?.ToString()),
+                    (ushort)(row.Cells[1].Value ?? 0),
+                    (ushort)index
+                ))
+                .OrderBy(item => item.Index)
+                .ToList();
+
+            dt_HiddenItems.Rows.Clear();
+            RomData.HiddenItems = items;
+            PopulateHiddenItemTable();
+
+            MessageBox.Show("Patch applied. Click save to commit changes.", "Success");
+        }
+
+        private void btn_Standardize_Click(object sender, EventArgs e)
+        {
+            IsLoadingData = true;
+            Patch_StandardizeTable();
+            IsLoadingData = false;
+        }
+
+        private void btn_SaveChanges_Click(object sender, EventArgs e)
+        {
+            IsLoadingData = true;
+            SaveChanges();
+            IsLoadingData = false;
+        }
+
+        private void dt_HiddenItems_CurrentCellDirtyStateChanged(object sender, EventArgs e)
+        {
+            if (dt_HiddenItems.IsCurrentCellDirty)
+            {
+                // Commit the change immediately
+                dt_HiddenItems.CommitEdit(DataGridViewDataErrorContexts.Commit);
+            }
+        }
+
+        private void dt_HiddenItems_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0 && e.ColumnIndex == dt_HiddenItems.Columns["hiddenItem"].Index)
+            {
+                var row = dt_HiddenItems.Rows[e.RowIndex];
+                string newValue = row.Cells[e.ColumnIndex].Value?.ToString(); // Get the new value
+
+                int itemIndex = RomData.ItemNames.FindIndex(x => x == newValue);
+                Console.WriteLine($"New Value: {newValue}, Item Index: {itemIndex}");
+            }
+        }
+
+        private void SaveChanges()
+        {
+            var saveChanges = MessageBox.Show("Save changes to Hidden Item table?", "Save Changes", MessageBoxButtons.YesNo);
+            if (saveChanges == DialogResult.Yes)
+            {
+                UnsavedChanges = false;
+                var hiddenItems = new List<HiddenItem>();
+                for (int i = 0; i < dt_HiddenItems.RowCount; i++)
+                {
+                    var row = dt_HiddenItems.Rows[i];
+                    int tableIndex = i;
+                    ushort itemId = (ushort)RomData.ItemNames.FindIndex(x => x == row.Cells[0].Value?.ToString());
+                    ushort quantity = (ushort)row.Cells[1].Value;
+                    ushort hiddenItemIndex = (ushort)row.Cells[2].Value;
+
+                    hiddenItems.Add(new HiddenItem(tableIndex, itemId, quantity, hiddenItemIndex));
+                }
+
+                var (success, error) = romFileMethods.SaveChanges(hiddenItems);
+
+                if (!success)
+                {
+                    MessageBox.Show("Something went wrong\n" + error);
+                    Console.WriteLine("Unable to save changes " + error);
+                }
+                else
+                {
+                    RomData.HiddenItems = hiddenItems;
+                    MessageBox.Show("Saved changes!", "Success");
+                }
+            }
+        }
+
+        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            IsLoadingData = true;
+            SaveChanges();
+            IsLoadingData = false;
         }
     }
 }

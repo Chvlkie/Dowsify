@@ -1,11 +1,6 @@
 ﻿using Dowsify.Main.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static Dowsify.Main.Global.GlobalVariables;
 using static Dowsify.Main.Database.Database;
+using static Dowsify.Main.Global.GlobalVariables;
 
 namespace Dowsify.Main.Data
 {
@@ -15,6 +10,7 @@ namespace Dowsify.Main.Data
         public static byte EuropeByte { get; set; }
         public static string FileName { get; set; }
         public static string GameCode { get; set; }
+
         public static GameFamily GameFamily => GameVersion switch
         {
             GameVersion.Diamond or GameVersion.Pearl => GameFamily.DiamondPearl,
@@ -82,6 +78,18 @@ namespace Dowsify.Main.Data
 
             FileName = romName;
             Console.WriteLine("Setup Rom File | Success");
+        }
+
+        public static void Reset()
+        {
+            FileName = string.Empty;
+            WorkingDirectory = string.Empty;
+            ItemNames = [];
+            HiddenItems = [];
+            GameCode = string.Empty;
+            EuropeByte = 0x0;
+            GameVersion = GameVersion.Unknown;
+            GameDirectories?.Clear();
         }
     }
 }

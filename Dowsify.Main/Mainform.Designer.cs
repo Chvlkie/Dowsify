@@ -41,8 +41,8 @@
             btn_SaveChanges = new ToolStripButton();
             toolStripSeparator1 = new ToolStripSeparator();
             btn_ExtractRom = new ToolStripButton();
-            toolStripDropDownButton1 = new ToolStripDropDownButton();
-            standardizeTableIndexToolStripMenuItem1 = new ToolStripMenuItem();
+            btn_Patches = new ToolStripDropDownButton();
+            btn_Standardize = new ToolStripMenuItem();
             toolStrip1 = new ToolStrip();
             hiddenItemTablePanel = new Panel();
             menuStrip1.SuspendLayout();
@@ -67,6 +67,7 @@
             // 
             // openROMFolderToolStripMenuItem
             // 
+            openROMFolderToolStripMenuItem.Image = Properties.Resources.open_ico;
             openROMFolderToolStripMenuItem.Name = "openROMFolderToolStripMenuItem";
             openROMFolderToolStripMenuItem.Size = new Size(191, 22);
             openROMFolderToolStripMenuItem.Text = "Open Extracted Folder";
@@ -75,9 +76,11 @@
             // saveToolStripMenuItem
             // 
             saveToolStripMenuItem.Enabled = false;
+            saveToolStripMenuItem.Image = Properties.Resources.save_ico;
             saveToolStripMenuItem.Name = "saveToolStripMenuItem";
             saveToolStripMenuItem.Size = new Size(191, 22);
             saveToolStripMenuItem.Text = "Save Changes";
+            saveToolStripMenuItem.Click += saveToolStripMenuItem_Click;
             // 
             // toolsToolStripMenuItem
             // 
@@ -88,6 +91,8 @@
             // 
             // extractNDSRomToolStripMenuItem
             // 
+            extractNDSRomToolStripMenuItem.Enabled = false;
+            extractNDSRomToolStripMenuItem.Image = Properties.Resources.unpack_ico;
             extractNDSRomToolStripMenuItem.Name = "extractNDSRomToolStripMenuItem";
             extractNDSRomToolStripMenuItem.Size = new Size(135, 22);
             extractNDSRomToolStripMenuItem.Text = "Extract .nds";
@@ -96,35 +101,39 @@
             // 
             patchesToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { standardizeTableIndexToolStripMenuItem });
             patchesToolStripMenuItem.Enabled = false;
+            patchesToolStripMenuItem.Image = Properties.Resources.patch_ico;
             patchesToolStripMenuItem.Name = "patchesToolStripMenuItem";
             patchesToolStripMenuItem.Size = new Size(135, 22);
             patchesToolStripMenuItem.Text = "Patches";
             // 
             // standardizeTableIndexToolStripMenuItem
             // 
+            standardizeTableIndexToolStripMenuItem.Image = Properties.Resources.sort_ico;
             standardizeTableIndexToolStripMenuItem.Name = "standardizeTableIndexToolStripMenuItem";
             standardizeTableIndexToolStripMenuItem.Size = new Size(197, 22);
             standardizeTableIndexToolStripMenuItem.Text = "Standardize Table Index";
+            standardizeTableIndexToolStripMenuItem.Click += standardizeTableIndexToolStripMenuItem_Click;
             // 
             // btn_OpenFolder
             // 
             btn_OpenFolder.DisplayStyle = ToolStripItemDisplayStyle.Image;
-            btn_OpenFolder.Image = (Image)resources.GetObject("btn_OpenFolder.Image");
+            btn_OpenFolder.Image = Properties.Resources.open_ico;
             btn_OpenFolder.ImageTransparentColor = Color.Magenta;
             btn_OpenFolder.Name = "btn_OpenFolder";
             btn_OpenFolder.Size = new Size(23, 22);
-            btn_OpenFolder.Text = "toolStripButton1";
+            btn_OpenFolder.Text = "Open Extracted Folder";
             btn_OpenFolder.Click += btn_OpenFolder_Click;
             // 
             // btn_SaveChanges
             // 
             btn_SaveChanges.DisplayStyle = ToolStripItemDisplayStyle.Image;
             btn_SaveChanges.Enabled = false;
-            btn_SaveChanges.Image = (Image)resources.GetObject("btn_SaveChanges.Image");
+            btn_SaveChanges.Image = Properties.Resources.save_ico;
             btn_SaveChanges.ImageTransparentColor = Color.Magenta;
             btn_SaveChanges.Name = "btn_SaveChanges";
             btn_SaveChanges.Size = new Size(23, 22);
-            btn_SaveChanges.Text = "toolStripButton2";
+            btn_SaveChanges.Text = "Save Changes";
+            btn_SaveChanges.Click += btn_SaveChanges_Click;
             // 
             // toolStripSeparator1
             // 
@@ -134,32 +143,34 @@
             // btn_ExtractRom
             // 
             btn_ExtractRom.DisplayStyle = ToolStripItemDisplayStyle.Image;
-            btn_ExtractRom.Image = (Image)resources.GetObject("btn_ExtractRom.Image");
+            btn_ExtractRom.Enabled = false;
+            btn_ExtractRom.Image = Properties.Resources.unpack_ico;
             btn_ExtractRom.ImageTransparentColor = Color.Magenta;
             btn_ExtractRom.Name = "btn_ExtractRom";
             btn_ExtractRom.Size = new Size(23, 22);
-            btn_ExtractRom.Text = "toolStripButton3";
+            btn_ExtractRom.Text = "Extract .nds";
             // 
-            // toolStripDropDownButton1
+            // btn_Patches
             // 
-            toolStripDropDownButton1.DisplayStyle = ToolStripItemDisplayStyle.Image;
-            toolStripDropDownButton1.DropDownItems.AddRange(new ToolStripItem[] { standardizeTableIndexToolStripMenuItem1 });
-            toolStripDropDownButton1.Enabled = false;
-            toolStripDropDownButton1.Image = (Image)resources.GetObject("toolStripDropDownButton1.Image");
-            toolStripDropDownButton1.ImageTransparentColor = Color.Magenta;
-            toolStripDropDownButton1.Name = "toolStripDropDownButton1";
-            toolStripDropDownButton1.Size = new Size(29, 22);
-            toolStripDropDownButton1.Text = "toolStripDropDownButton1";
+            btn_Patches.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            btn_Patches.DropDownItems.AddRange(new ToolStripItem[] { btn_Standardize });
+            btn_Patches.Enabled = false;
+            btn_Patches.Image = Properties.Resources.patch_ico;
+            btn_Patches.ImageTransparentColor = Color.Magenta;
+            btn_Patches.Name = "btn_Patches";
+            btn_Patches.Size = new Size(29, 22);
             // 
-            // standardizeTableIndexToolStripMenuItem1
+            // btn_Standardize
             // 
-            standardizeTableIndexToolStripMenuItem1.Name = "standardizeTableIndexToolStripMenuItem1";
-            standardizeTableIndexToolStripMenuItem1.Size = new Size(197, 22);
-            standardizeTableIndexToolStripMenuItem1.Text = "Standardize Table Index";
+            btn_Standardize.Image = Properties.Resources.sort_ico;
+            btn_Standardize.Name = "btn_Standardize";
+            btn_Standardize.Size = new Size(197, 22);
+            btn_Standardize.Text = "Standardize Table Index";
+            btn_Standardize.Click += btn_Standardize_Click;
             // 
             // toolStrip1
             // 
-            toolStrip1.Items.AddRange(new ToolStripItem[] { btn_OpenFolder, btn_SaveChanges, toolStripSeparator1, btn_ExtractRom, toolStripDropDownButton1 });
+            toolStrip1.Items.AddRange(new ToolStripItem[] { btn_OpenFolder, btn_SaveChanges, toolStripSeparator1, btn_ExtractRom, btn_Patches });
             toolStrip1.Location = new Point(0, 24);
             toolStrip1.Name = "toolStrip1";
             toolStrip1.Size = new Size(784, 25);
@@ -182,6 +193,7 @@
             Controls.Add(hiddenItemTablePanel);
             Controls.Add(toolStrip1);
             Controls.Add(menuStrip1);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MainMenuStrip = menuStrip1;
             MinimumSize = new Size(800, 450);
             Name = "Mainform";
@@ -209,8 +221,8 @@
         private ToolStripButton btn_SaveChanges;
         private ToolStripSeparator toolStripSeparator1;
         private ToolStripButton btn_ExtractRom;
-        private ToolStripDropDownButton toolStripDropDownButton1;
-        private ToolStripMenuItem standardizeTableIndexToolStripMenuItem1;
+        private ToolStripDropDownButton btn_Patches;
+        private ToolStripMenuItem btn_Standardize;
         private ToolStrip toolStrip1;
         private Panel hiddenItemTablePanel;
     }

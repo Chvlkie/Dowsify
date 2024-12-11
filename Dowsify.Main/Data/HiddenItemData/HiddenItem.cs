@@ -9,7 +9,7 @@ namespace Dowsify.Main.Data
     public class HiddenItem
     {
         public HiddenItem() { }
-        public HiddenItem(int tableIndex, uint itemId, uint quantity, uint index)
+        public HiddenItem(int tableIndex, ushort itemId, ushort quantity, ushort index)
         {
             TableIndex = tableIndex;
             ItemId = itemId;
@@ -18,9 +18,9 @@ namespace Dowsify.Main.Data
         }
 
         public int TableIndex { get; set; }
-        public uint ItemId { get; set; }
-        public uint Quantity { get; set; }
-        public uint Index { get; set; }
+        public ushort ItemId { get; set; }
+        public ushort Quantity { get; set; }
+        public ushort Index { get; set; }
         public string CommonScript => (Index + 8000).ToString();
     }
 }

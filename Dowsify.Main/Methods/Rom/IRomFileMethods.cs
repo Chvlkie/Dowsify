@@ -44,7 +44,8 @@ namespace Dowsify.Main.Methods
         /// <param name="filePath"></param>
         /// <returns></returns>
         (bool Success, string ErrorMessage) LoadInitialRomData(string filePath);
-             
+        (bool Success, string ErrorMessage) SaveChanges(List<HiddenItem> hiddenItems);
+
 
         /// <summary>
         /// Setup the required NarcDirectory paths for opened ROM File.

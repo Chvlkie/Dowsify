@@ -11,6 +11,31 @@ namespace Dowsify.Main.Methods
 {
     public class RomFileMethods : IRomFileMethods
     {
+        #region Write
+
+        public (bool Success, string ErrorMessage) SaveChanges(List<HiddenItem> hiddenItems)
+        {
+            try
+            {
+                using var writer = new Arm9.Arm9Writer(RomData.HiddenTableOffset);
+                foreach (var item in hiddenItems)
+                {
+                    writer.Write(item.ItemId);
+                    writer.Write(item.Quantity);
+                    writer.Write((ushort)0);
+                    writer.Write(item.Index);
+                }
+
+                return (true, "");
+            }
+            catch (Exception ex)
+            {
+                return (false, ex.Message);
+            }
+        }
+
+        #endregion Write
+
         #region Extract
 
         public (bool Success, string ErrorMessage) LoadInitialRomData(string filePath)
@@ -96,10 +121,10 @@ namespace Dowsify.Main.Methods
             {
                 for (int i = 0; i < RomData.HiddenTableSize; i++)
                 {
-                    uint itemId = reader.ReadUInt16();
-                    uint quantity = reader.ReadUInt16();
-                    uint padding = reader.ReadUInt16();
-                    uint index = reader.ReadUInt16();
+                    ushort itemId = reader.ReadUInt16();
+                    ushort quantity = reader.ReadUInt16();
+                    ushort padding = reader.ReadUInt16();
+                    ushort index = reader.ReadUInt16();
                     items.Add(new HiddenItem(i, itemId, quantity, index));
                 }
                 return items;

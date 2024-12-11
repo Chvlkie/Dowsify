@@ -1,5 +1,6 @@
-# Dowsify - Hidden Item Table Editor
-![image](https://github.com/user-attachments/assets/1eab08df-586b-43ea-9f61-fa9bb1f5f657)
+# ![dowsify](https://github.com/user-attachments/assets/c18d5178-f9ce-451c-b212-34f7d5893959) Dowsify - Hidden Item Table Editor
+![image](https://github.com/user-attachments/assets/491eeb01-5b26-4036-86e7-7b675a2ae8a0)
+
 
 **Features**
 - Edit the Hidden Item Table

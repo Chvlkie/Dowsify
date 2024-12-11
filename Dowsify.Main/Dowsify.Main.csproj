@@ -37,8 +37,12 @@
 		<EmbeddedResource Include="Resources\Icon\settings_ico.png" />
 		<EmbeddedResource Include="Resources\Icon\sort_ico.png" />
 		<EmbeddedResource Include="Resources\Icon\unpack_ico.png" />
-		<EmbeddedResource Include="Tools\blz.exe" />
-		<EmbeddedResource Include="Tools\ndstool.exe" />
+		<EmbeddedResource Include="Tools\blz.exe">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</EmbeddedResource>
+		<EmbeddedResource Include="Tools\ndstool.exe">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</EmbeddedResource>
 	</ItemGroup>
 
 	<ItemGroup>

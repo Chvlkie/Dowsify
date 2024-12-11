@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Resources\Icon\nds_ico.png" />
+    <None Remove="Resources\Icon\open_ico.png" />
+    <None Remove="Resources\Icon\patch_ico.png" />
+    <None Remove="Resources\Icon\save_ico.png" />
+    <None Remove="Resources\Icon\settings_ico.png" />
+    <None Remove="Resources\Icon\sort_ico.png" />
+    <None Remove="Resources\Icon\unpack_ico.png" />
+    <None Remove="Tools\blz.exe" />
+    <None Remove="Tools\ndstool.exe" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Icon\nds_ico.png" />
+    <EmbeddedResource Include="Resources\Icon\open_ico.png" />
+    <EmbeddedResource Include="Resources\Icon\patch_ico.png" />
+    <EmbeddedResource Include="Resources\Icon\save_ico.png" />
+    <EmbeddedResource Include="Resources\Icon\settings_ico.png" />
+    <EmbeddedResource Include="Resources\Icon\sort_ico.png" />
+    <EmbeddedResource Include="Resources\Icon\unpack_ico.png" />
+    <EmbeddedResource Include="Tools\blz.exe" />
+    <EmbeddedResource Include="Tools\ndstool.exe" />
+  </ItemGroup>
+
+</Project>

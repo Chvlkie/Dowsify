@@ -193,8 +193,75 @@ namespace Dowsify.Main
             if (dt_HiddenItems.IsCurrentCellDirty)
             {
                 dt_HiddenItems.CommitEdit(DataGridViewDataErrorContexts.Commit);
+                UnsavedChanges = true;
             }
-            UnsavedChanges = true;
+        }
+
+        private void dt_HiddenItems_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        {
+            DataGridViewCell currentCell = dt_HiddenItems.Rows[e.RowIndex].Cells[e.ColumnIndex];
+
+            if (currentCell.ColumnIndex == 1 || currentCell.ColumnIndex == 2)
+            {
+                string newValue = currentCell.Value?.ToString();
+
+                if (currentCell.ColumnIndex == 2)
+                {
+                    foreach (DataGridViewRow row in dt_HiddenItems.Rows)
+                    {
+                        if (row.Index != currentCell.RowIndex && row.Cells[2].Value?.ToString() == newValue)
+                        {
+                            MessageBox.Show("Duplicate value found. The value in column 3 must be unique.", "Duplicate Value", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            currentCell.Style.BackColor = Color.Red;
+                            return;
+                        }
+                        else
+                        {
+                            currentCell.Style.BackColor = SystemColors.Window;
+                        }
+                    }
+                }
+                UpdateRomDataHiddenItems(e.RowIndex, e.ColumnIndex, newValue);
+            }
+        }
+
+        private void UpdateRomDataHiddenItems(int rowIndex, int columnIndex, string newValue)
+        {
+            if (rowIndex >= 0 && rowIndex < RomData.HiddenItems.Count)
+            {
+                switch (columnIndex)
+                {
+                    case 0:
+                        RomData.HiddenItems[rowIndex].ItemId = (ushort)RomData.ItemNames.FindIndex(x => x == newValue);
+                        break;
+
+                    case 1:
+                        RomData.HiddenItems[rowIndex].Quantity = ushort.Parse(newValue);
+                        break;
+
+                    case 2:
+                        RomData.HiddenItems[rowIndex].Index = ushort.Parse(newValue);
+                        dt_HiddenItems.Rows[rowIndex].Cells[3].Value = RomData.HiddenItems[rowIndex].CommonScript;
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        }
+
+        private void dt_HiddenItems_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
+        {
+            if (e.Control is TextBox textBox)
+            {
+                textBox.KeyPress -= TextBox_KeyPress_NumericOnly;
+
+                int columnIndex = dt_HiddenItems.CurrentCell.ColumnIndex;
+                if (columnIndex == 1 || columnIndex == 2)
+                {
+                    textBox.KeyPress += TextBox_KeyPress_NumericOnly;
+                }
+            }
         }
 
         private void EnableMenus()
@@ -220,8 +287,12 @@ namespace Dowsify.Main
             };
 
             dt_HiddenItems.CurrentCellDirtyStateChanged -= dt_HiddenItems_CurrentCellDirtyStateChanged;
+            dt_HiddenItems.EditingControlShowing -= dt_HiddenItems_EditingControlShowing;
+            dt_HiddenItems.CellEndEdit -= dt_HiddenItems_CellEndEdit;
 
             dt_HiddenItems.CurrentCellDirtyStateChanged += dt_HiddenItems_CurrentCellDirtyStateChanged;
+            dt_HiddenItems.EditingControlShowing += dt_HiddenItems_EditingControlShowing;
+            dt_HiddenItems.CellEndEdit += dt_HiddenItems_CellEndEdit;
 
             dt_HiddenItems.Columns.Clear();
 
@@ -403,8 +474,29 @@ namespace Dowsify.Main
             }
         }
 
+        private void ResetCellToOriginalValue(DataGridViewCell cell)
+        {
+            if (cell != null && cell.RowIndex >= 0 && cell.RowIndex < RomData.HiddenItems.Count)
+            {
+                var originalValue = RomData.HiddenItems[cell.RowIndex].Index;
+                cell.Value = originalValue;
+            }
+        }
+
         private void SaveChanges()
         {
+            foreach (DataGridViewRow row in dt_HiddenItems.Rows)
+            {
+                foreach (DataGridViewCell cell in row.Cells)
+                {
+                    if (cell.Style.BackColor == Color.Red)
+                    {
+                        MessageBox.Show("Some cells have invalid values. Please correct them before saving.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                }
+            }
+
             var saveChanges = MessageBox.Show("Save changes to Hidden Item table?", "Save Changes", MessageBoxButtons.YesNo);
             if (saveChanges == DialogResult.Yes)
             {
@@ -448,6 +540,14 @@ namespace Dowsify.Main
             IsLoadingData = true;
             Patch_StandardizeTable();
             IsLoadingData = false;
+        }
+
+        private void TextBox_KeyPress_NumericOnly(object sender, KeyPressEventArgs e)
+        {
+            if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
+            {
+                e.Handled = true;
+            }
         }
     }
 }

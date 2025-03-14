@@ -86,7 +86,7 @@ namespace Dowsify.Main
             {
                 IsLoadingData = true;
                 int progressCount = 0;
-                const int totalSteps = 2;
+                const int totalSteps = 4;
                 const int increment = 100 / totalSteps;
 
                 void ReportProgress()
@@ -102,6 +102,12 @@ namespace Dowsify.Main
                 }
 
                 RomData.ItemNames = romFileMethods.GetItemNames();
+                ReportProgress();
+
+                RomData.HiddenTableOffset = romFileMethods.GetHiddenItemTableOffset();
+                ReportProgress();
+
+                RomData.HiddenTableSize = romFileMethods.GetHiddenItemsTableSize();
                 ReportProgress();
 
                 RomData.HiddenItems = romFileMethods.GetHiddenItems();
@@ -200,18 +206,19 @@ namespace Dowsify.Main
         private void dt_HiddenItems_CellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
             DataGridViewCell currentCell = dt_HiddenItems.Rows[e.RowIndex].Cells[e.ColumnIndex];
-
-            if (currentCell.ColumnIndex == 1 || currentCell.ColumnIndex == 2)
+            int hiddenItemTableScriptIndex = RomData.IsPlatinum ?
+                3 : 2;
+            if (currentCell.ColumnIndex == 1 || currentCell.ColumnIndex == 2 || (RomData.IsPlatinum && currentCell.ColumnIndex == 3))
             {
                 string newValue = currentCell.Value?.ToString();
 
-                if (currentCell.ColumnIndex == 2)
+                if (currentCell.ColumnIndex == hiddenItemTableScriptIndex)
                 {
                     foreach (DataGridViewRow row in dt_HiddenItems.Rows)
                     {
-                        if (row.Index != currentCell.RowIndex && row.Cells[2].Value?.ToString() == newValue)
+                        if (row.Index != currentCell.RowIndex && row.Cells[hiddenItemTableScriptIndex].Value?.ToString() == newValue)
                         {
-                            MessageBox.Show("Duplicate value found. The value in column 3 must be unique.", "Duplicate Value", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            MessageBox.Show($"Duplicate value found. The value in column {hiddenItemTableScriptIndex + 1} must be unique.", "Duplicate Value", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             currentCell.Style.BackColor = Color.Red;
                             return;
                         }
@@ -229,23 +236,51 @@ namespace Dowsify.Main
         {
             if (rowIndex >= 0 && rowIndex < RomData.HiddenItems.Count)
             {
-                switch (columnIndex)
+                if (RomData.IsPlatinum)
                 {
-                    case 0:
-                        RomData.HiddenItems[rowIndex].ItemId = (ushort)RomData.ItemNames.FindIndex(x => x == newValue);
-                        break;
+                    switch (columnIndex)
+                    {
+                        case 0:
+                            RomData.HiddenItems[rowIndex].ItemId = (ushort)RomData.ItemNames.FindIndex(x => x == newValue);
+                            break;
 
-                    case 1:
-                        RomData.HiddenItems[rowIndex].Quantity = ushort.Parse(newValue);
-                        break;
+                        case 1:
+                            RomData.HiddenItems[rowIndex].QuantityPlat = byte.Parse(newValue);
+                            break;
 
-                    case 2:
-                        RomData.HiddenItems[rowIndex].Index = ushort.Parse(newValue);
-                        dt_HiddenItems.Rows[rowIndex].Cells[3].Value = RomData.HiddenItems[rowIndex].CommonScript;
-                        break;
+                        case 2:
+                            RomData.HiddenItems[rowIndex].RangePlat = byte.Parse(newValue);
+                            break;
 
-                    default:
-                        break;
+                        case 3:
+                            RomData.HiddenItems[rowIndex].Index = ushort.Parse(newValue);
+                            dt_HiddenItems.Rows[rowIndex].Cells[4].Value = RomData.HiddenItems[rowIndex].CommonScript;
+                            break;
+
+                        default:
+                            break;
+                    }
+                }
+                else
+                {
+                    switch (columnIndex)
+                    {
+                        case 0:
+                            RomData.HiddenItems[rowIndex].ItemId = (ushort)RomData.ItemNames.FindIndex(x => x == newValue);
+                            break;
+
+                        case 1:
+                            RomData.HiddenItems[rowIndex].Quantity = ushort.Parse(newValue);
+                            break;
+
+                        case 2:
+                            RomData.HiddenItems[rowIndex].Index = ushort.Parse(newValue);
+                            dt_HiddenItems.Rows[rowIndex].Cells[3].Value = RomData.HiddenItems[rowIndex].CommonScript;
+                            break;
+
+                        default:
+                            break;
+                    }
                 }
             }
         }
@@ -272,7 +307,7 @@ namespace Dowsify.Main
             btn_Patches.Enabled = true;
         }
 
-        private void InitializeHiddentItemTable()
+        private void SetupHeartGoldSoulSilverTable()
         {
             dt_HiddenItems = new DataGridView
             {
@@ -331,6 +366,7 @@ namespace Dowsify.Main
                 ValueType = typeof(string),
                 ReadOnly = true
             };
+            commonScript.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
             dt_HiddenItems.Columns.Add(commonScript);
 
             int totalWidth = dt_HiddenItems.Width;
@@ -340,6 +376,102 @@ namespace Dowsify.Main
             dt_HiddenItems.Columns["commonScript"].Width = (int)(totalWidth * 0.20);
 
             hiddenItemTablePanel.Controls.Add(dt_HiddenItems);
+        }
+
+        private void SetupPlatinumTable()
+        {
+            dt_HiddenItems = new DataGridView
+            {
+                Name = "dt_HiddenItems",
+                Dock = DockStyle.Fill,
+                AllowUserToAddRows = false,
+                AllowUserToDeleteRows = false,
+                AllowUserToResizeRows = false,
+                ReadOnly = false,
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
+            };
+
+            dt_HiddenItems.CurrentCellDirtyStateChanged -= dt_HiddenItems_CurrentCellDirtyStateChanged;
+            dt_HiddenItems.EditingControlShowing -= dt_HiddenItems_EditingControlShowing;
+            dt_HiddenItems.CellEndEdit -= dt_HiddenItems_CellEndEdit;
+
+            dt_HiddenItems.CurrentCellDirtyStateChanged += dt_HiddenItems_CurrentCellDirtyStateChanged;
+            dt_HiddenItems.EditingControlShowing += dt_HiddenItems_EditingControlShowing;
+            dt_HiddenItems.CellEndEdit += dt_HiddenItems_CellEndEdit;
+
+            dt_HiddenItems.Columns.Clear();
+
+            DataGridViewComboBoxColumn hiddenItem = new()
+            {
+                HeaderText = "Item",
+                Name = "hiddenItem"
+            };
+            hiddenItem.Items.Clear();
+            hiddenItem.Items.AddRange([.. RomData.ItemNames]);
+            hiddenItem.ValueType = typeof(string);
+            dt_HiddenItems.Columns.Add(hiddenItem);
+
+            DataGridViewTextBoxColumn hiddenItemQuantity = new()
+            {
+                HeaderText = "Quantity",
+                Name = "hiddenItemQuantity",
+                ValueType = typeof(byte)
+            };
+            hiddenItemQuantity.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+            dt_HiddenItems.Columns.Add(hiddenItemQuantity);
+
+            DataGridViewTextBoxColumn hiddenItemRange = new()
+            {
+                HeaderText = "Range",
+                Name = "hiddenItemRange",
+                ValueType = typeof(byte)
+            };
+            hiddenItemRange.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+            dt_HiddenItems.Columns.Add(hiddenItemRange);
+
+            DataGridViewTextBoxColumn hiddenItemIndex = new()
+            {
+                HeaderText = "Index",
+                Name = "hiddenItemIndex",
+                ValueType = typeof(ushort)
+            };
+            hiddenItemIndex.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+            dt_HiddenItems.Columns.Add(hiddenItemIndex);
+
+            DataGridViewTextBoxColumn commonScript = new()
+            {
+                HeaderText = "Common Script",
+                Name = "commonScript",
+                ValueType = typeof(string),
+                ReadOnly = true
+            };
+            commonScript.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+            dt_HiddenItems.Columns.Add(commonScript);
+
+            int totalWidth = dt_HiddenItems.Width;
+            dt_HiddenItems.Columns["hiddenItem"].Width = (int)(totalWidth * 0.50);
+            dt_HiddenItems.Columns["hiddenItemQuantity"].Width = (int)(totalWidth * 0.10);
+            dt_HiddenItems.Columns["hiddenItemRange"].Width = (int)(totalWidth * 0.10);
+            dt_HiddenItems.Columns["hiddenItemIndex"].Width = (int)(totalWidth * 0.10);
+            dt_HiddenItems.Columns["commonScript"].Width = (int)(totalWidth * 0.20);
+
+            hiddenItemTablePanel.Controls.Add(dt_HiddenItems);
+        }
+
+        private void InitializeHiddentItemTable()
+        {
+            switch (RomData.GameFamily)
+            {
+                case GameFamily.Platinum:
+                    SetupPlatinumTable();
+                    break;
+
+                case GameFamily.HeartGoldSoulSilver:
+                case GameFamily.HgEngine:
+                    SetupHeartGoldSoulSilverTable();
+                    break;
+            }
         }
 
         private void Mainform_Shown(object sender, EventArgs e)
@@ -380,49 +512,81 @@ namespace Dowsify.Main
 
         private void Patch_StandardizeTable()
         {
-            var confirm = MessageBox.Show(
-                "This patch will sort the Hidden Items Table by Index." +
-                "\nThis means the CommonScripts will also be in consecutive order." +
-                "\nHidden Item overworld events will point to different items than vanilla.\n" +
-                "\nIf you are wanting a 'Vanilla Experience' and do not plan on changing hidden item locations, do not use this patch.",
-                "Confirm Patch",
-                MessageBoxButtons.OKCancel,
-                MessageBoxIcon.Information
-            );
+            if (RomData.GameFamily == GameFamily.Platinum)
+            {
+                MessageBox.Show(
+                               "Platinum's table is already in order.\nNo patch necessary", "No Need to Patch",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Information);
+            }
+            else
+            {
+                var confirm = MessageBox.Show(
+                   "This patch will sort the Hidden Items Table by Index." +
+                   "\nThis means the CommonScripts will also be in consecutive order." +
+                   "\nHidden Item overworld events will point to different items than vanilla.\n" +
+                   "\nIf you are wanting a 'Vanilla Experience' and do not plan on changing hidden item locations, do not use this patch.",
+                   "Confirm Patch",
+                   MessageBoxButtons.OKCancel,
+                   MessageBoxIcon.Information
+               );
 
-            if (confirm != DialogResult.OK)
-                return;
+                if (confirm != DialogResult.OK)
+                    return;
 
-            var items = dt_HiddenItems.Rows
-                .Cast<DataGridViewRow>()
-                .Where(row => !row.IsNewRow)
-                .Select((row, index) => new HiddenItem(
-                    index,
-                    (ushort)RomData.ItemNames.FindIndex(x => x == row.Cells[0].Value?.ToString()),
-                    (ushort)(row.Cells[1].Value ?? 0),
-                    (ushort)index
-                ))
-                .OrderBy(item => item.Index)
-                .ToList();
+                var items = dt_HiddenItems.Rows
+                    .Cast<DataGridViewRow>()
+                    .Where(row => !row.IsNewRow)
+                    .Select((row, index) => new HiddenItem(
+                        index,
+                        (ushort)RomData.ItemNames.FindIndex(x => x == row.Cells[0].Value?.ToString()),
+                        (ushort)(row.Cells[1].Value ?? 0),
+                        (ushort)index
+                    ))
+                    .OrderBy(item => item.Index)
+                    .ToList();
 
-            dt_HiddenItems.Rows.Clear();
-            RomData.HiddenItems = items;
-            PopulateHiddenItemTable();
+                dt_HiddenItems.Rows.Clear();
+                RomData.HiddenItems = items;
+                PopulateHiddenItemTable();
 
-            MessageBox.Show("Patch applied. Click save to commit changes.", "Success");
+                MessageBox.Show("Patch applied. Click save to commit changes.", "Success");
+            }
         }
 
         private void PopulateHiddenItemTable()
         {
-            for (int i = 0; i < RomData.HiddenItems.Count; i++)
+            switch (RomData.GameFamily)
             {
-                var hiddenItem = RomData.HiddenItems[i];
-                string hiddenItemName = RomData.ItemNames[hiddenItem.ItemId];
-                ushort quantity = hiddenItem.Quantity;
-                ushort itemIndex = hiddenItem.Index;
-                string commonScript = hiddenItem.CommonScript;
+                case GameFamily.Platinum:
+                    for (int i = 0; i < RomData.HiddenItems.Count; i++)
+                    {
+                        var hiddenItem = RomData.HiddenItems[i];
+                        string hiddenItemName = hiddenItem.ItemId <= RomData.ItemNames.Count ?
+                            RomData.ItemNames[hiddenItem.ItemId] : RomData.ItemNames[0];
+                        byte quantity = hiddenItem.QuantityPlat;
+                        byte range = hiddenItem.RangePlat;
+                        ushort itemIndex = hiddenItem.Index;
+                        string commonScript = hiddenItem.CommonScript;
 
-                dt_HiddenItems.Rows.Add(hiddenItemName, quantity, itemIndex, commonScript);
+                        dt_HiddenItems.Rows.Add(hiddenItemName, quantity, range, itemIndex, commonScript);
+                    }
+                    break;
+
+                case GameFamily.HeartGoldSoulSilver:
+                case GameFamily.HgEngine:
+                    for (int i = 0; i < RomData.HiddenItems.Count; i++)
+                    {
+                        var hiddenItem = RomData.HiddenItems[i];
+                        string hiddenItemName = hiddenItem.ItemId <= RomData.ItemNames.Count ?
+                            RomData.ItemNames[hiddenItem.ItemId] : RomData.ItemNames[0];
+                        ushort quantity = hiddenItem.Quantity;
+                        ushort itemIndex = hiddenItem.Index;
+                        string commonScript = hiddenItem.CommonScript;
+
+                        dt_HiddenItems.Rows.Add(hiddenItemName, quantity, itemIndex, commonScript);
+                    }
+                    break;
             }
         }
 
@@ -453,9 +617,9 @@ namespace Dowsify.Main
                     return;
                 }
 
-                if (RomData.GameVersion != GameVersion.HeartGold)
+                if (RomData.GameFamily == GameFamily.DiamondPearl)
                 {
-                    MessageBox.Show("Dowsify can only currently open HG roms (only tested on HG USA).\n" +
+                    MessageBox.Show("Dowsify can only currently open HGSS or Platinum ROMS.\n" +
                         "Other ROM compatability will come soon.", "Not Yet Supported", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     CloseProject();
                     return;
@@ -502,16 +666,37 @@ namespace Dowsify.Main
             {
                 UnsavedChanges = false;
                 var hiddenItems = new List<HiddenItem>();
-                for (int i = 0; i < dt_HiddenItems.RowCount; i++)
+                switch (RomData.GameFamily)
                 {
-                    var row = dt_HiddenItems.Rows[i];
-                    int tableIndex = i;
-                    ushort itemId = (ushort)RomData.ItemNames.FindIndex(x => x == row.Cells[0].Value?.ToString());
-                    ushort quantity = (ushort)row.Cells[1].Value;
-                    ushort hiddenItemIndex = (ushort)row.Cells[2].Value;
 
-                    hiddenItems.Add(new HiddenItem(tableIndex, itemId, quantity, hiddenItemIndex));
+                    case GameFamily.Platinum:
+                        for (int i = 0; i < dt_HiddenItems.RowCount; i++)
+                        {
+                            var row = dt_HiddenItems.Rows[i];
+                            int tableIndex = i;
+                            ushort itemId = (ushort)RomData.ItemNames.FindIndex(x => x == row.Cells[0].Value?.ToString());
+                            byte quantity = (byte)row.Cells[1].Value;
+                            byte range = (byte)row.Cells[2].Value;
+                            ushort hiddenItemIndex = (ushort)row.Cells[3].Value;
+
+                            hiddenItems.Add(new HiddenItem(tableIndex, itemId, quantity, range, hiddenItemIndex));
+                        }
+                        break;
+                    case GameFamily.HeartGoldSoulSilver:
+                    case GameFamily.HgEngine:
+                        for (int i = 0; i < dt_HiddenItems.RowCount; i++)
+                        {
+                            var row = dt_HiddenItems.Rows[i];
+                            int tableIndex = i;
+                            ushort itemId = (ushort)RomData.ItemNames.FindIndex(x => x == row.Cells[0].Value?.ToString());
+                            ushort quantity = (ushort)row.Cells[1].Value;
+                            ushort hiddenItemIndex = (ushort)row.Cells[2].Value;
+
+                            hiddenItems.Add(new HiddenItem(tableIndex, itemId, quantity, hiddenItemIndex));
+                        }
+                        break;
                 }
+
 
                 var (success, error) = romFileMethods.SaveChanges(hiddenItems);
 

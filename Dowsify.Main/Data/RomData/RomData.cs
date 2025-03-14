@@ -1,4 +1,5 @@
 ﻿using Dowsify.Main.Enums;
+using System.Diagnostics;
 using static Dowsify.Main.Database.Database;
 using static Dowsify.Main.Global.GlobalVariables;
 
@@ -10,6 +11,7 @@ namespace Dowsify.Main.Data
         public static byte EuropeByte { get; set; }
         public static string FileName { get; set; }
         public static string GameCode { get; set; }
+        public static bool IsPlatinum => GameFamily == GameFamily.Platinum;
 
         public static GameFamily GameFamily => GameVersion switch
         {
@@ -32,20 +34,31 @@ namespace Dowsify.Main.Data
 
         public static GameVersion GameVersion { get; set; }
         public static List<HiddenItem> HiddenItems { get; set; }
+        public static uint HiddenTableOffset { get; set; }
 
-        public static uint HiddenTableOffset => GameVersion switch
+        public static uint HiddenTablePointerOffset => GameVersion switch
         {
-            GameVersion.HeartGold => 0xFA558,
-            GameVersion.HgEngine => 0xFA558,
+            GameVersion.Diamond => 0x0,
+            GameVersion.Pearl => 0x0,
+            GameVersion.Platinum => 0x3F470,
+            GameVersion.HeartGold => 0x405A8,
+            GameVersion.SoulSilver => 0x405A8,
+            GameVersion.HgEngine => 0x405A8,
             _ => 0x0,
         };
 
-        public static int HiddenTableSize => GameVersion switch
+        public static uint HiddenTableSizeOffset => GameVersion switch
         {
-            GameVersion.HeartGold => 231,
-            GameVersion.HgEngine => 231,
-            _ => 0,
+            GameVersion.Diamond => 0x0,
+            GameVersion.Pearl => 0x0,
+            GameVersion.Platinum => 0x3F474,
+            GameVersion.HeartGold => 0x405E4,
+            GameVersion.SoulSilver => 0x405E4,
+            GameVersion.HgEngine => 0x405E4,
+            _ => 0x0,
         };
+
+        public static int HiddenTableSize { get; set; }
 
         public static List<string> ItemNames { get; set; }
         public static string OverlayPath => WorkingDirectory + OverlayFilePath;

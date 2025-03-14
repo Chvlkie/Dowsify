@@ -18,13 +18,34 @@ namespace Dowsify.Main.Methods
             try
             {
                 using var writer = new Arm9.Arm9Writer(RomData.HiddenTableOffset);
-                foreach (var item in hiddenItems)
+
+                switch (RomData.GameFamily)
                 {
-                    writer.Write(item.ItemId);
-                    writer.Write(item.Quantity);
-                    writer.Write((ushort)0);
-                    writer.Write(item.Index);
+                    
+                 
+                    case GameFamily.Platinum:
+                        foreach (var item in hiddenItems)
+                        {
+                            writer.Write(item.ItemId);
+                            writer.Write(item.QuantityPlat);
+                            writer.Write(item.RangePlat);
+                            writer.Write((ushort)0);
+                            writer.Write(item.Index);
+                        }
+                        break;
+                    case GameFamily.HeartGoldSoulSilver:
+                    case GameFamily.HgEngine:
+                        foreach (var item in hiddenItems)
+                        {
+                            writer.Write(item.ItemId);
+                            writer.Write(item.Quantity);
+                            writer.Write((ushort)0);
+                            writer.Write(item.Index);
+                        }
+                        break;
                 }
+               
+               
 
                 return (true, "");
             }
@@ -113,20 +134,68 @@ namespace Dowsify.Main.Methods
 
         #region Get
 
+        public int GetHiddenItemsTableSize()
+        {
+            var items = new List<HiddenItem>();
+            using var reader = new Arm9.Arm9Reader(RomData.HiddenTableSizeOffset);
+            try
+            {
+             return RomData.GameFamily == GameFamily.HeartGoldSoulSilver ? reader.ReadByte() : reader.ReadUInt16();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred while reading hidden items size: {ex.Message}");
+                throw;
+            }
+        }
+
+        public uint GetHiddenItemTableOffset()
+        {
+            using var reader = new Arm9.Arm9Reader(RomData.HiddenTablePointerOffset);
+            try
+            {
+                var offset = reader.ReadUInt32();
+                offset -= Arm9Offset;
+                return offset;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred while getting hidden item table offset: {ex.Message}");
+                throw;
+            }
+        }
         public List<HiddenItem> GetHiddenItems()
         {
             var items = new List<HiddenItem>();
             using var reader = new Arm9.Arm9Reader(RomData.HiddenTableOffset);
             try
             {
-                for (int i = 0; i < RomData.HiddenTableSize; i++)
+                switch (RomData.GameFamily)
                 {
-                    ushort itemId = reader.ReadUInt16();
-                    ushort quantity = reader.ReadUInt16();
-                    ushort padding = reader.ReadUInt16();
-                    ushort index = reader.ReadUInt16();
-                    items.Add(new HiddenItem(i, itemId, quantity, index));
+                    case GameFamily.Platinum:
+                        for (int i = 0; i < RomData.HiddenTableSize; i++)
+                        {
+                            ushort itemId = reader.ReadUInt16();
+                            byte quantity = reader.ReadByte();
+                            byte range = reader.ReadByte();
+                            ushort padding = reader.ReadUInt16();
+                            ushort index = reader.ReadUInt16();
+                            items.Add(new HiddenItem(i, itemId, quantity, range, index));
+                        }
+                        break;
+                    case GameFamily.HeartGoldSoulSilver:
+                    case GameFamily.HgEngine:
+                        for (int i = 0; i < RomData.HiddenTableSize; i++)
+                        {
+                            ushort itemId = reader.ReadUInt16();
+                            ushort quantity = reader.ReadUInt16();
+                            ushort padding = reader.ReadUInt16();
+                            ushort index = reader.ReadUInt16();
+                            items.Add(new HiddenItem(i, itemId, quantity, index));
+                        }
+                        break;
                 }
+                
                 return items;
             }
             catch (Exception ex)

@@ -14,6 +14,8 @@ namespace Dowsify.Main.Methods
         /// <returns></returns>
         Task<(bool Success, string ExceptionMessage)> ExtractRomContentsAsync(string workingDirectory, string fileName);
         List<HiddenItem> GetHiddenItems();
+        int GetHiddenItemsTableSize();
+        uint GetHiddenItemTableOffset();
 
 
         /// <summary>

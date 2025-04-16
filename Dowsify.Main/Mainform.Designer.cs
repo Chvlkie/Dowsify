@@ -33,6 +33,9 @@
             fileToolStripMenuItem = new ToolStripMenuItem();
             openROMFolderToolStripMenuItem = new ToolStripMenuItem();
             saveToolStripMenuItem = new ToolStripMenuItem();
+            toolStripSeparator2 = new ToolStripSeparator();
+            importToolStripMenuItem = new ToolStripMenuItem();
+            exportToolStripMenuItem = new ToolStripMenuItem();
             toolsToolStripMenuItem = new ToolStripMenuItem();
             extractNDSRomToolStripMenuItem = new ToolStripMenuItem();
             patchesToolStripMenuItem = new ToolStripMenuItem();
@@ -60,7 +63,7 @@
             // 
             // fileToolStripMenuItem
             // 
-            fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { openROMFolderToolStripMenuItem, saveToolStripMenuItem });
+            fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { openROMFolderToolStripMenuItem, saveToolStripMenuItem, toolStripSeparator2, importToolStripMenuItem, exportToolStripMenuItem });
             fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             fileToolStripMenuItem.Size = new Size(37, 20);
             fileToolStripMenuItem.Text = "File";
@@ -81,6 +84,27 @@
             saveToolStripMenuItem.Size = new Size(191, 22);
             saveToolStripMenuItem.Text = "Save Changes";
             saveToolStripMenuItem.Click += saveToolStripMenuItem_Click;
+            // 
+            // toolStripSeparator2
+            // 
+            toolStripSeparator2.Name = "toolStripSeparator2";
+            toolStripSeparator2.Size = new Size(188, 6);
+            // 
+            // importToolStripMenuItem
+            // 
+            importToolStripMenuItem.Enabled = false;
+            importToolStripMenuItem.Name = "importToolStripMenuItem";
+            importToolStripMenuItem.Size = new Size(191, 22);
+            importToolStripMenuItem.Text = "Import .json";
+            importToolStripMenuItem.Click += importToolStripMenuItem_Click;
+            // 
+            // exportToolStripMenuItem
+            // 
+            exportToolStripMenuItem.Enabled = false;
+            exportToolStripMenuItem.Name = "exportToolStripMenuItem";
+            exportToolStripMenuItem.Size = new Size(191, 22);
+            exportToolStripMenuItem.Text = "Export .json";
+            exportToolStripMenuItem.Click += exportToolStripMenuItem_Click;
             // 
             // toolsToolStripMenuItem
             // 
@@ -225,5 +249,8 @@
         private ToolStripMenuItem btn_Standardize;
         private ToolStrip toolStrip1;
         private Panel hiddenItemTablePanel;
+        private ToolStripSeparator toolStripSeparator2;
+        private ToolStripMenuItem importToolStripMenuItem;
+        private ToolStripMenuItem exportToolStripMenuItem;
     }
 }

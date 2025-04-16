@@ -3,6 +3,7 @@ using Dowsify.Main.DsUtils;
 using Dowsify.Main.Enums;
 using Dowsify.Main.Global;
 using Dowsify.Main.Methods;
+using Newtonsoft.Json;
 using static Dowsify.Main.Global.GlobalVariables;
 
 namespace Dowsify.Main
@@ -190,6 +191,8 @@ namespace Dowsify.Main
             saveToolStripMenuItem.Enabled = false;
             patchesToolStripMenuItem.Enabled = false;
             btn_SaveChanges.Enabled = false;
+            importToolStripMenuItem.Enabled = false;
+            exportToolStripMenuItem.Enabled = false;
             btn_Patches.Enabled = false;
             hiddenItemTablePanel.Controls.Remove(dt_HiddenItems);
         }
@@ -304,6 +307,8 @@ namespace Dowsify.Main
             saveToolStripMenuItem.Enabled = true;
             patchesToolStripMenuItem.Enabled = true;
             btn_SaveChanges.Enabled = true;
+            importToolStripMenuItem.Enabled = true;
+            exportToolStripMenuItem.Enabled = true;
             btn_Patches.Enabled = true;
         }
 
@@ -554,6 +559,45 @@ namespace Dowsify.Main
             }
         }
 
+        public void ExportHiddenItemsToJson(List<HiddenItem> hiddenItems, string filePath)
+        {
+            try
+            {
+                var settings = new JsonSerializerSettings
+                {
+                    Formatting = Formatting.Indented,
+                    DefaultValueHandling = DefaultValueHandling.Ignore // Skip default values
+                };
+
+                string json = JsonConvert.SerializeObject(hiddenItems, settings);
+                File.WriteAllText(filePath, json);
+
+                Console.WriteLine($"Exported {hiddenItems.Count} hidden items to {filePath}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Export failed: {ex.Message}");
+                throw;
+            }
+        }
+
+        public List<HiddenItem> ImportHiddenItemsFromJson(string filePath)
+        {
+            try
+            {
+                string json = File.ReadAllText(filePath);
+                var items = JsonConvert.DeserializeObject<List<HiddenItem>>(json);
+
+                Console.WriteLine($"Imported {items.Count} hidden items from {filePath}");
+                return items;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Import failed: {ex.Message}");
+                throw;
+            }
+        }
+
         private void PopulateHiddenItemTable()
         {
             switch (RomData.GameFamily)
@@ -732,6 +776,50 @@ namespace Dowsify.Main
             if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
             {
                 e.Handled = true;
+            }
+        }
+
+        private void importToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var openDialog = new OpenFileDialog())
+            {
+                openDialog.Filter = "JSON Files (*.json)|*.json";
+                openDialog.Title = "Import Hidden Items";
+
+                if (openDialog.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        RomData.HiddenItems = ImportHiddenItemsFromJson(openDialog.FileName);
+                        MessageBox.Show($"Imported {RomData.HiddenItems.Count} items.", "Success");
+                        RefreshHiddenItems();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Import failed: {ex.Message}", "Error");
+                    }
+                }
+            }
+        }
+
+        public void RefreshHiddenItems()
+        {
+            dt_HiddenItems.Rows.Clear();
+            PopulateHiddenItemTable();
+        }
+
+        private void exportToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var saveDialog = new SaveFileDialog())
+            {
+                saveDialog.Filter = "JSON Files (*.json)|*.json";
+                saveDialog.Title = "Export Hidden Items";
+                saveDialog.DefaultExt = "json";
+
+                if (saveDialog.ShowDialog() == DialogResult.OK)
+                {
+                    ExportHiddenItemsToJson(RomData.HiddenItems, saveDialog.FileName);
+                }
             }
         }
     }

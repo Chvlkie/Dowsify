@@ -12,6 +12,6 @@ Using this patch will change the items in a Vanilla rom, so if you don't plan on
 - You can select an item, quantity and the "Script Index". Script Index is how the game calls hidden item by CommonScript.
 
 **Important**
-- Currently only compatible with HeartGold Version.
+- Currently only compatible with HeartGold (USA), SoulSilver (USA) and Platinum (USA) Version.
 - Other versions implemented soon.
 - Feature to extract ROM using this program will come soon.
